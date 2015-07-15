@@ -41,7 +41,6 @@ import br.com.ggdio.superj.util.StringUtil;
  * @param <T>
  *            - The entity type
  */
-//TODO: Implementar lógica de query dinamica via http query string
 public abstract class AbstractRepository<T> implements Repository<T> {
 
 	protected static final Logger log = Logger.getLogger(AbstractRepository.class);
