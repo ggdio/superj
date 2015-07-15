@@ -105,9 +105,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 		try {
 			begin();
 			entity = getEntityManager().find(clazz, id);
-			commit();
 		} catch (Exception e) {
-			rollback();
 			String msg = "An unexpected error occured while trying to search the entity '" + clazz.getSimpleName() + "' by its ID: "+e.getMessage();
 			log.error(msg, e);
 			throw new RepositoryException(msg, e);
@@ -140,9 +138,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 			if (maxResults > 0)
 				query.setMaxResults(maxResults);
 			entities = query.getResultList();
-			commit();
 		} catch (Exception e) {
-			rollback();
 			String msg = "An unexpected error occured while trying to list the entity '" + clazz.getSimpleName() + "': "+e.getMessage();
 			log.error(msg, e);
 			throw new RepositoryException(msg, e);
@@ -177,9 +173,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 		try{
 			begin();
 			entities = query.perform(getEntityManager(), clazz);
-			commit();
 		} catch(Exception e){
-			rollback();
 			String msg = "An unexpected error occured while trying to execute the custom query '"+query.getClass().getSimpleName()+"' for entity '" + clazz.getSimpleName() + "': "+e.getMessage();
 			log.error(msg, e);
 			throw new RepositoryException(msg, e);
@@ -210,9 +204,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 			if (maxResults > 0)
 				query.setMaxResults(maxResults);
 			entities = query.getResultList();
-			commit();
 		} catch (Exception e) {
-			rollback();
 			String msg = "An unexpected error occured while executing the HQL: '" + hql + "' with an row limit of '" + maxResults + "' and first result '" + firstResult + "': "+e.getMessage();
 			log.error(msg, e);
 			throw new RepositoryException(msg, e);
@@ -254,7 +246,9 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 	public void saveOrUpdate(T entity) throws RepositoryException, EntityExistsException {
 		try {
 			begin();
+			
 			mergeOrPersist(entity);
+			
 			commit();
 		} 
 		catch(ConstraintViolationException e){
@@ -350,14 +344,22 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 	}
 	
 	/**
-	 * Initialize connection and begin transaction
+	 * Initialize connection
 	 */
 	protected void begin() {
-		if (!isEntityManagerOpen() && !isTransactionActive()) {
+		begin(false);
+	}
+	
+	/**
+	 * Initialize connection with transaction
+	 */
+	protected void begin(boolean transactional) {
+		if (!isEntityManagerOpen() && (transactional && !isTransactionActive())) {
 			try {
 				EntityManager em = emf.createEntityManager();
 				setEntityManager(em);
-				em.getTransaction().begin();
+				if(transactional)
+					em.getTransaction().begin();
 			} catch (PersistenceException e) {
 				log.warn("Couldn't open and begin the transaction: "+e.getMessage(), e);
 			}
