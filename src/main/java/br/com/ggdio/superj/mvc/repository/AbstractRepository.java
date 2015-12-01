@@ -244,7 +244,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 	@Override
 	public void saveOrUpdate(T entity) throws RepositoryException, EntityExistsException {
 		try {
-			begin();
+			begin(true);
 			
 			mergeOrPersist(entity);
 			
@@ -298,7 +298,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 	@Override
 	public void delete(T entity) throws RepositoryException {
 		try{
-			begin();
+			begin(true);
 			if(!getEntityManager().contains(entity))
 				entity = getEntityManager().merge(entity);
 			getEntityManager().remove(entity);
@@ -325,7 +325,7 @@ public abstract class AbstractRepository<T> implements Repository<T> {
 	public int hqlDelete(String hql) throws RepositoryException{
 		int rows = 0;
 		try{
-			begin();
+			begin(true);
 			Query query = getEntityManager().createQuery(hql);
 			rows = query.executeUpdate();
 			commit();
